@@ -79,13 +79,46 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.x = this.effect.width * 0.4;
 			this.y = this.effect.height * 0.5;
 			this.image = document.getElementById('whale1');
+			this.angle = 0;
+			this.va = 0.01;
+			this.curve = this.effect.height * 0.1;
+			this.spriteWidth = 420;
+			this.spriteHeight = 284;
+			this.frameX = 0;
+			this.maxFrame = 38;
+			this.fps = 50;
+			this.frameTimer = 0;
+			this.frameInterval = 1000 / this.fps;
 		}
 		draw(context) {
+			context.save();
+			context.translate(this.x, this.y);
+			context.rotate(Math.cos(this.angle) * 0.5);
 			context.drawImage(
 				this.image,
-				this.x - this.image.width * 0.5,
-				this.y - this.image.height * 0.5
+				this.spriteWidth * this.frameX,
+				0,
+				this.spriteWidth,
+				this.spriteHeight,
+				-this.spriteWidth * 0.5,
+				-this.spriteHeight * 0.5,
+				this.spriteWidth,
+				this.spriteHeight
 			);
+			context.restore();
+		}
+		update(deltaTime) {
+			if (this.frameTimer > this.frameInterval) {
+				if (this.frameX >= this.maxFrame) this.frameX = 0;
+				this.frameX++;
+				this.frameTimer = 0;
+			} else {
+				this.frameTimer += deltaTime;
+			}
+			this.angle += this.va;
+			this.y =
+				this.effect.height * 0.5 + Math.sin(this.angle) * this.curve;
+			if (this.angle > Math.PI * 2) this.angle = 0;
 		}
 	}
 	class Effect {
@@ -129,13 +162,14 @@ document.addEventListener('DOMContentLoaded', function () {
 				this.particles.push(new Particle(this));
 			}
 		}
-		handleParticles(context) {
+		handleParticles(context, deltaTime) {
+			this.whale.draw(context);
+			this.whale.update(deltaTime);
 			this.connectParticles(context);
 			this.particles.forEach((partice) => {
 				partice.draw(context);
 				partice.update();
 			});
-			this.whale.draw(context);
 		}
 		connectParticles(context) {
 			for (let a = 0; a < this.particles.length; a++) {
@@ -169,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.height = height;
 			this.whale.x = this.width * 0.4;
 			this.whale.y = this.height * 0.5;
+			this.whale.curve = this.height * 0.2;
 			const gradient = this.context.createLinearGradient(
 				0,
 				0,
@@ -187,11 +222,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	const effect = new Effect(canvas, ctx);
-
-	function animate() {
+	let lastTime = 0;
+	function animate(timeStamp) {
+		const deltaTime = timeStamp - lastTime;
+		lastTime = timeStamp;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		effect.handleParticles(ctx);
+		effect.handleParticles(ctx, deltaTime);
 		requestAnimationFrame(animate);
 	}
-	animate();
+	animate(0);
 });
