@@ -15,18 +15,20 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.radius = Math.floor(Math.random() * 6 + 1);
 			this.imageSize = this.radius * 8;
 			this.halfImageSize = this.imageSize * 0.5;
-			this.x =
+			this.startX =
 				this.imageSize +
 				Math.random() *
-					(this.effect.width + this.effect.maxDistance * 4);
-			this.y =
-				this.imageSize +
+					(this.effect.width + this.effect.maxDistance * 2);
+			this.startY =
 				Math.random() * (this.effect.height - this.imageSize * 2);
-			this.vx = -1;
+			this.x = this.startX;
+			this.y = this.startY;
+			this.vx = -1.5;
 			this.pushX = 0;
 			this.pushY = 0;
-			this.friction = 0.8;
+			this.friction = 0.6;
 			this.image = document.getElementById('star');
+			this.returnForce = 0;
 		}
 		draw(context) {
 			context.drawImage(
@@ -38,6 +40,25 @@ document.addEventListener('DOMContentLoaded', function () {
 			);
 		}
 		update() {
+			const dx = this.x - this.effect.whale.x;
+			const dy = this.y - this.effect.whale.y;
+			const distance = Math.hypot(dx, dy);
+			const force = this.effect.whale.radius / distance;
+
+			const dx2 = this.x - this.startX;
+			const dy2 = this.y - this.startY;
+			if (distance < this.effect.whale.radius) {
+				const angle = Math.atan2(dy, dx);
+				this.pushX += Math.cos(angle) * force;
+				this.pushY += Math.sin(angle) * force;
+			} else if (
+				distance > this.effect.whale.radius + this.radius &&
+				this.pushX !== 0
+			) {
+				const angle = Math.atan2(dy2, dx2);
+				this.pushY -= Math.sin(angle) * 2;
+			}
+
 			if (this.effect.mouse.pressed) {
 				const dx = this.x - this.effect.mouse.x;
 				const dy = this.y - this.effect.mouse.y;
@@ -49,8 +70,10 @@ document.addEventListener('DOMContentLoaded', function () {
 					this.pushY += Math.sin(angle) * force;
 				}
 			}
+
 			this.x += (this.pushX *= this.friction) + this.vx;
 			this.y += this.pushY *= this.friction;
+			this.startX += this.vx;
 
 			if (this.x < -this.imageSize - this.effect.maxDistance) {
 				this.x =
@@ -60,16 +83,16 @@ document.addEventListener('DOMContentLoaded', function () {
 				this.y =
 					this.imageSize +
 					Math.random() * (this.effect.height - this.imageSize * 2);
+				this.pushX = 0;
+				this.pushY = 0;
 			}
 		}
 		reset() {
 			this.x =
 				this.imageSize +
 				Math.random() *
-					(this.effect.width + this.effect.maxDistance * 4);
-			this.y =
-				this.imageSize +
-				Math.random() * (this.effect.height - this.imageSize * 2);
+					(this.effect.width + this.effect.maxDistance * 2);
+			this.y = Math.random() * (this.effect.height - this.imageSize * 2);
 		}
 	}
 
@@ -90,11 +113,12 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.fps = 50;
 			this.frameTimer = 0;
 			this.frameInterval = 1000 / this.fps;
+			this.radius = 200;
 		}
 		draw(context) {
 			context.save();
 			context.translate(this.x, this.y);
-			context.rotate(Math.cos(this.angle) * 0.5);
+			context.rotate(Math.cos(this.angle) * 0.4);
 			context.drawImage(
 				this.image,
 				this.spriteWidth * this.frameX,
@@ -129,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.width = this.canvas.width;
 			this.height = this.canvas.height;
 			this.particles = [];
-			this.numberOfParticles = 500;
+			this.numberOfParticles = 200;
 			this.maxDistance = 110;
 			this.createParticles();
 			this.whale = new Whale(this);
