@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			this.spriteWidth = 420;
 			this.spriteHeight = 284;
 			this.frameX = 0;
+			this.frameY = Math.floor(Math.random() * 4);
 			this.maxFrame = 38;
 			this.fps = 50;
 			this.frameTimer = 0;
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			context.drawImage(
 				this.image,
 				this.spriteWidth * this.frameX,
-				0,
+				this.spriteHeight * this.frameY,
 				this.spriteWidth,
 				this.spriteHeight,
 				-this.spriteWidth * 0.5,
